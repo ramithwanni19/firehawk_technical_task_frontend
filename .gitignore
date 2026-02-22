@@ -1,9 +1,30 @@
-.angular/
+# IDEs and Editors
 .vscode/
+.idea/
+.angular/
+
+# Dependencies
 node_modules/
-.env
+
+# Build output
 dist/
-build/
-public/
-package-lock.json
+tmp/
+out-tsc/
+bazel-out/
+
+# Misc
+.sass-cache/
+connect.lock
+coverage/
+libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+typings/
+
+# System Files
+.DS_Store
+Thumbs.db
+firehawk-cars-app/public/favicon.ico
+firehawk-cars-app/package-lock.json
 firehawk-cars-app/.editorconfig

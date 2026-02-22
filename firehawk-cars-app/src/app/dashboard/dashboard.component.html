@@ -2,16 +2,14 @@
   <header>
     <div class="header-left">
       <h1>Firehawk Car Registry</h1>
-      <span class="count-badge">{{ filteredCars.length }} Cars Found</span>
+      <span class="count-badge">{{ filteredCars.length }} Cars on this page</span>
     </div>
     <div class="search-container">
       <span class="search-icon">🔍</span>
       <input 
         type="text" 
         [(ngModel)]="searchTerm" 
-        (input)="currentPage = 1" 
-        placeholder="Search by make, model, origin..."
-      >
+        placeholder="Filter cars...">
     </div>
   </header>
 
@@ -122,7 +120,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let car of paginatedCars">
+          <tr *ngFor="let car of filteredCars">
             <td class="primary-text">{{ car.make }}</td>
             <td class="model-text">{{ car.model }}</td>
             <td>{{ car.mpg }}</td>
@@ -139,9 +137,21 @@
     </div>
 
     <div class="table-footer">
-      <button class="page-btn" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
-      <div class="page-info">Page <strong>{{ currentPage }}</strong> of {{ totalPages }}</div>
-      <button class="page-btn" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
+      <button 
+        class="page-btn" 
+        (click)="prevPage()" 
+        [disabled]="currentPage === 1">
+        Previous
+      </button>
+      
+      <div class="page-info">Page <strong>{{ currentPage }}</strong></div>
+      
+      <button 
+        class="page-btn" 
+        (click)="nextPage()" 
+        [disabled]="!nextPageToken">
+        Next
+      </button>
     </div>
   </div>
 </div>

@@ -12,7 +12,6 @@ import { Router } from '@angular/router';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  // These variables match the [(ngModel)] names in your HTML
   email = '';
   password = '';
   errorMessage = '';
@@ -23,16 +22,12 @@ export class LoginComponent {
   ) {}
 
   async onLogin() {
-    this.errorMessage = ''; // Clear previous errors
+    this.errorMessage = ''; 
     
     try {
-      // Call the login method in your service
       await this.authService.login(this.email, this.password);
-      
-      // If successful, navigate to the dashboard
       this.router.navigate(['/dashboard']);
     } catch (error: any) {
-      // Handle Firebase errors (e.g., wrong password, user not found)
       console.error('Login failed', error);
       this.errorMessage = 'Invalid email or password. Please try again.';
     }

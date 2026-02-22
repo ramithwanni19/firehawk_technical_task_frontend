@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarService } from '../services/car.service';
 
-// Define the structure of our car data to satisfy TypeScript
 interface Car {
   id?: string;
   make: string;
@@ -26,13 +25,11 @@ interface Car {
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
-  // Use the interface here to prevent the "Object vs Array" error
   cars: Car[] = []; 
   searchTerm: string = '';
   
-  // Pagination Variables
   currentPage: number = 1;
-  pageSize: number = 10; // Increased to 10 for better display of 398 records
+  pageSize: number = 10;
 
   constructor(private carService: CarService) {}
 
@@ -53,7 +50,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Filter logic: This runs every time 'searchTerm' changes
   get filteredCars(): Car[] {
     if (!this.searchTerm) return this.cars;
     
@@ -65,7 +61,6 @@ export class DashboardComponent implements OnInit {
     );
   }
 
-  // Slices the filtered list for the current page
   get paginatedCars(): Car[] {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     return this.filteredCars.slice(startIndex, startIndex + this.pageSize);
@@ -82,7 +77,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // Reset pagination when searching
   onSearchChange() {
     this.currentPage = 1;
   }

@@ -1,7 +1,4 @@
 firehawk-cars-app/.editorconfig
 firehawk-cars-app/package-lock.json
-firehawk-cars-app/tsconfig.app.json
-firehawk-cars-app/.vscode/extensions.json
-firehawk-cars-app/.vscode/launch.json
-firehawk-cars-app/.vscode/tasks.json
+firehawk-cars-app/.vscode/*
 firehawk-cars-app/public/favicon.ico

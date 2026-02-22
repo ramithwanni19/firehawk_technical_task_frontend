@@ -50,17 +50,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  get filteredCars(): Car[] {
-    if (!this.searchTerm) return this.cars;
-    
-    const term = this.searchTerm.toLowerCase();
-    return this.cars.filter(car => 
-      car.make.toLowerCase().includes(term) ||
-      car.model.toLowerCase().includes(term) ||
-      car.origin.toLowerCase().includes(term)
-    );
-  }
-
   get paginatedCars(): Car[] {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     return this.filteredCars.slice(startIndex, startIndex + this.pageSize);
@@ -80,4 +69,44 @@ export class DashboardComponent implements OnInit {
   onSearchChange() {
     this.currentPage = 1;
   }
+
+sortColumn: keyof Car | '' = ''; 
+sortDirection: 'asc' | 'desc' = 'asc';
+
+setSort(column: keyof Car) {
+  if (this.sortColumn === column) {
+    this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    this.sortColumn = column;
+    this.sortDirection = 'asc';
+  }
+}
+
+get filteredCars(): Car[] {
+  let filtered = this.cars;
+
+
+  if (this.searchTerm) {
+    const term = this.searchTerm.toLowerCase();
+    filtered = filtered.filter(car => 
+      car.make.toLowerCase().includes(term) ||
+      car.model.toLowerCase().includes(term) ||
+      car.origin.toLowerCase().includes(term)
+    );
+  }
+
+  if (this.sortColumn) {
+    filtered = [...filtered].sort((a, b) => {
+      const valA = a[this.sortColumn as keyof Car];
+      const valB = b[this.sortColumn as keyof Car];
+
+      if (valA === valB) return 0;
+      
+      const comparison = valA! > valB! ? 1 : -1;
+      return this.sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  return filtered;
+}
 }

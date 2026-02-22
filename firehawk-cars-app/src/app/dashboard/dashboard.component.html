@@ -1,52 +1,147 @@
 <div class="dashboard">
-    <header>
-      <h1>🚗 Firehawk Car Registry</h1>
-      <div class="search-box">
-        <input type="text" [(ngModel)]="searchTerm" (input)="currentPage = 1" placeholder="Search by make or model...">
-      </div>
-    </header>
-  
-    <div class="table-container">
-      <div class="table-scroll"> <table>
-          <thead>
-            <tr>
-              <th>Make</th>
-              <th>Model</th>
-              <th>MPG</th>
-              <th>Cylinders</th>
-              <th>Displacement</th>
-              <th>Horsepower</th>
-              <th>Weight</th>
-              <th>Acceleration</th>
-              <th>Year</th>
-              <th>Origin</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let car of paginatedCars">
-              <td class="bold-text">{{ car.make }}</td>
-              <td>{{ car.model }}</td>
-              <td>{{ car.mpg }}</td>
-              <td>{{ car.cylinders }}</td>
-              <td>{{ car.displacement }}</td>
-              <td>{{ car.horsepower || 'N/A' }}</td>
-              <td>{{ car.weight }}</td>
-              <td>{{ car.acceleration }}</td>
-              <td>{{ car.year }}</td>
-              <td><span class="origin-badge">{{ car.origin }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-  
-      <div class="pagination">
-        <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
-          &laquo; Previous
-        </button>
-        <span class="page-info">Page <strong>{{ currentPage }}</strong> of {{ totalPages }}</span>
-        <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
-          Next &raquo;
-        </button>
-      </div>
+  <header>
+    <div class="header-left">
+      <h1>Firehawk Car Registry</h1>
+      <span class="count-badge">{{ filteredCars.length }} Cars Found</span>
+    </div>
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input 
+        type="text" 
+        [(ngModel)]="searchTerm" 
+        (input)="currentPage = 1" 
+        placeholder="Search by make, model, origin..."
+      >
+    </div>
+  </header>
+
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th (click)="setSort('make')" class="col-make sortable">
+              <div class="th-content">
+                <span>Make</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'make' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'make' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('model')" class="col-model sortable">
+              <div class="th-content">
+                <span>Model</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'model' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'model' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('mpg')" class="col-data sortable">
+              <div class="th-content">
+                <span>MPG</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'mpg' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'mpg' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('cylinders')" class="col-data sortable">
+              <div class="th-content">
+                <span>Cyl</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'cylinders' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'cylinders' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('displacement')" class="col-data sortable">
+              <div class="th-content">
+                <span>Disp</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'displacement' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'displacement' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('horsepower')" class="col-data sortable">
+              <div class="th-content">
+                <span>HP</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'horsepower' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'horsepower' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('weight')" class="col-data sortable">
+              <div class="th-content">
+                <span>Weight</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'weight' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'weight' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('acceleration')" class="col-data sortable">
+              <div class="th-content">
+                <span>Acc</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'acceleration' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'acceleration' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('year')" class="col-data sortable">
+              <div class="th-content">
+                <span>Year</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'year' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'year' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+
+            <th (click)="setSort('origin')" class="col-origin sortable">
+              <div class="th-content">
+                <span>Origin</span>
+                <div class="sort-indicator">
+                  <span class="arrow" [class.highlight]="sortColumn === 'origin' && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === 'origin' && sortDirection === 'desc'">▼</span>
+                </div>
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let car of paginatedCars">
+            <td class="primary-text">{{ car.make }}</td>
+            <td class="model-text">{{ car.model }}</td>
+            <td>{{ car.mpg }}</td>
+            <td>{{ car.cylinders }}</td>
+            <td>{{ car.displacement }}</td>
+            <td>{{ car.horsepower || '—' }}</td>
+            <td>{{ car.weight | number }}</td>
+            <td>{{ car.acceleration }}</td>
+            <td>{{ car.year }}</td>
+            <td class="origin-text">{{ car.origin }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <button class="page-btn" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">Previous</button>
+      <div class="page-info">Page <strong>{{ currentPage }}</strong> of {{ totalPages }}</div>
+      <button class="page-btn" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">Next</button>
     </div>
   </div>
+</div>

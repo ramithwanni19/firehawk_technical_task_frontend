@@ -1,0 +1,9 @@
+.angular/
+.vscode/
+node_modules/
+.env
+dist/
+build/
+public/
+package-lock.json
+firehawk-cars-app/.editorconfig

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs'; 
+import { switchMap, catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export interface Car {
@@ -26,35 +27,49 @@ interface CarResponse {
   providedIn: 'root'
 })
 export class CarService {
-  private readonly API_URL = 'http://192.168.1.8:3000/api/all-cars';
+  private readonly API_URL = 'http://192.168.1.8:3000/api';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
-  /**
-   * @param sortBy Field to sort by (default: 'make')
-   * @param direction 'asc' or 'desc'
-   * @param limit Number of items per page
-   * @param lastDocId The ID of the last item from the previous page
-   */
   getCars(
-    sortBy: string = 'make',
-    direction: 'asc' | 'desc' = 'asc',
-    limit: number = 10,
-    lastDocId?: string
+    sortBy: string, 
+    direction: string, 
+    limit: number, 
+    lastDocId: string | null = null, 
+    filters: any = {}
   ): Observable<CarResponse> {
     
-    const token = this.authService.getToken();
-    const headers = { 'Authorization': `Bearer ${token}` };
+    return of(this.authService.getToken()).pipe(
+      switchMap(token => {
+        if (!token) {
+          return throwError(() => new Error('No authentication token found.'));
+        }
+        
+        const headers = new HttpHeaders({
+          'Authorization': `Bearer ${token}`
+        });
 
-    let params = new HttpParams()
-      .set('sortBy', sortBy)
-      .set('direction', direction)
-      .set('limit', limit.toString());
+        let params = new HttpParams()
+          .set('sortBy', sortBy)
+          .set('direction', direction)
+          .set('limit', limit.toString());
+      
+        if (lastDocId) {
+          params = params.set('lastDocId', lastDocId);
+        }
+      
+        Object.keys(filters).forEach(key => {
+          if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
+            params = params.set(key, filters[key].toString());
+          }
+        });
 
-    if (lastDocId) {
-      params = params.set('lastDocId', lastDocId);
-    }
-
-    return this.http.get<CarResponse>(this.API_URL, { headers, params });
+        return this.http.get<CarResponse>(`${this.API_URL}/all-cars`, { headers, params });
+      }),
+      catchError(err => {
+        console.error('CarService Error:', err);
+        return throwError(() => err);
+      })
+    );
   }
 }

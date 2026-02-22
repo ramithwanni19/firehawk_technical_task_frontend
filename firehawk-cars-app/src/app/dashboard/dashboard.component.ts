@@ -1,26 +1,41 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarService, Car } from '../services/car.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DecimalPipe],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
   cars: Car[] = [];
   nextPageToken: string | null = null;
+  pageHistory: string[] = [];
   
-  pageHistory: string[] = []; 
-  
-  searchTerm: string = '';
+  currentPage: number = 1;
   pageSize: number = 10;
   sortColumn: string = 'make'; 
   sortDirection: 'asc' | 'desc' = 'asc';
-  currentPage: number = 1;
+
+  showFilterModal: boolean = false;
+
+  tempFilters: any = {
+    make: '',
+    model: '',
+    model_year: '',
+    cylinders: '',
+    mpg: '',
+    displacement: '',
+    horsepower: '',
+    weight: '',
+    acceleration: '',
+    origin: ''
+  };
+
+  activeFilters: any = {};
 
   constructor(private carService: CarService) {}
 
@@ -29,18 +44,19 @@ export class DashboardComponent implements OnInit {
   }
 
   loadCars(pageToken?: string) {
-    this.carService.getCars(this.sortColumn, this.sortDirection, this.pageSize, pageToken)
-      .subscribe({
-        next: (response) => {
-          this.cars = response.data;
-          this.nextPageToken = response.nextPageToken;
-          console.log(`Loaded ${this.cars.length} cars from Backend`);
-        },
-        error: (err) => {
-          console.error('Backend error:', err);
-          alert('Could not connect to the Backend Server.');
-        }
-      });
+    this.carService.getCars(
+      this.sortColumn, 
+      this.sortDirection, 
+      this.pageSize, 
+      pageToken, 
+      this.activeFilters
+    ).subscribe({
+      next: (response) => {
+        this.cars = response.data || [];
+        this.nextPageToken = response.nextPageToken || null;
+      },
+      error: (err) => console.error('Backend search error:', err)
+    });
   }
 
   setSort(column: string) {
@@ -53,24 +69,35 @@ export class DashboardComponent implements OnInit {
     this.resetPagination();
   }
 
+  applyFilters() {
+    this.activeFilters = { ...this.tempFilters };
+    
+    Object.keys(this.activeFilters).forEach(key => {
+      if (this.activeFilters[key] === '') delete this.activeFilters[key];
+    });
+
+    this.showFilterModal = false;
+    this.resetPagination();
+  }
+
+  clearFilters() {
+    this.tempFilters = { make: '', model: '', year: '', cylinders: '', origin: '' };
+    this.applyFilters();
+  }
+
   nextPage() {
     if (this.nextPageToken) {
-      // Save current "start" point so we can go back
-      const currentId = this.cars[0]?.id;
-      if (currentId) this.pageHistory.push(currentId); 
-      
+      const currentFirstId = this.cars[0]?.id;
+      if (currentFirstId) this.pageHistory.push(currentFirstId);
       this.currentPage++;
       this.loadCars(this.nextPageToken);
     }
   }
 
-  // Note: Firestore pagination is forward-only by default. 
-  // To go back properly, we usually re-fetch from the start or use history.
   prevPage() {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.pageHistory.pop();
-      const prevId = this.pageHistory[this.pageHistory.length - 1];
+      const prevId = this.pageHistory.pop();
       this.loadCars(prevId);
     }
   }
@@ -81,15 +108,33 @@ export class DashboardComponent implements OnInit {
     this.loadCars();
   }
 
-  // For Search: Firestore doesn't support partial text search (like "contains") 
-  // natively without a 3rd party like Algolia. 
-  // For now, we search within the CURRENTly loaded page.
   get filteredCars(): Car[] {
-    if (!this.searchTerm) return this.cars;
-    const term = this.searchTerm.toLowerCase();
-    return this.cars.filter(car => 
-      car.make.toLowerCase().includes(term) ||
-      car.model.toLowerCase().includes(term)
-    );
+    return this.cars;
   }
+
+getActiveFilterKeys(): string[] {
+  return Object.keys(this.activeFilters);
+}
+
+formatLabel(key: string): string {
+  const labels: any = {
+    make: 'Make',
+    model: 'Model',
+    model_year: 'Year',
+    cylinders: 'Cyl',
+    mpg: 'MPG',
+    horsepower: 'HP',
+    displacement: 'Disp',
+    weight: 'Weight',
+    acceleration: 'Acc',
+    origin: 'Origin'
+  };
+  return labels[key] || key;
+}
+
+removeFilter(key: string) {
+  delete this.activeFilters[key];
+  this.tempFilters[key] = '';
+  this.resetPagination();
+}
 }

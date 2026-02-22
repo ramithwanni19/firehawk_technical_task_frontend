@@ -1,0 +1,52 @@
+<div class="dashboard">
+  <header>
+    <h1>🚗 Firehawk Car Registry</h1>
+    <div class="search-box">
+      <input type="text" [(ngModel)]="searchTerm" (input)="currentPage = 1" placeholder="Search by make or model...">
+    </div>
+  </header>
+
+  <div class="table-container">
+    <div class="table-scroll"> <table>
+        <thead>
+          <tr>
+            <th>Make</th>
+            <th>Model</th>
+            <th>MPG</th>
+            <th>Cylinders</th>
+            <th>Displacement</th>
+            <th>Horsepower</th>
+            <th>Weight</th>
+            <th>Acceleration</th>
+            <th>Year</th>
+            <th>Origin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let car of paginatedCars">
+            <td class="bold-text">{{ car.make }}</td>
+            <td>{{ car.model }}</td>
+            <td>{{ car.mpg }}</td>
+            <td>{{ car.cylinders }}</td>
+            <td>{{ car.displacement }}</td>
+            <td>{{ car.horsepower || 'N/A' }}</td>
+            <td>{{ car.weight }}</td>
+            <td>{{ car.acceleration }}</td>
+            <td>{{ car.year }}</td>
+            <td><span class="origin-badge">{{ car.origin }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1">
+        &laquo; Previous
+      </button>
+      <span class="page-info">Page <strong>{{ currentPage }}</strong> of {{ totalPages }}</span>
+      <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages">
+        Next &raquo;
+      </button>
+    </div>
+  </div>
+</div>

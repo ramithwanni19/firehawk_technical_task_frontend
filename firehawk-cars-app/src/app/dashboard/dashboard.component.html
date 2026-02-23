@@ -55,6 +55,10 @@
         <button class="page-btn highlight-btn" (click)="addRecordModal = true">
           + Add Record
         </button>
+
+        <button class="page-btn backup-btn" (click)="backupAllData()" title="Download Full CSV Backup">
+          📥 Backup Registry
+        </button>
       </div>
     </div>
   </header>
@@ -78,6 +82,7 @@
               </span>
             </div>
           </th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -91,6 +96,7 @@
           <td>{{ car.weight | number }}</td>
           <td>{{ car.acceleration }}</td>
           <td>{{ car.model_year }}</td>
+          <td>{{ car.origin }}</td>
           <td>
             <button class="delete-btn" (click)="onDelete(car)" title="Delete Record">
               🗑️

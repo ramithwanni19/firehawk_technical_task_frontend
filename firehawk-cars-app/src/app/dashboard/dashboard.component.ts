@@ -307,6 +307,53 @@ export class DashboardComponent implements OnInit {
       this.showToast = false;
     }, 3000);
   }
+  
+  backupAllData() {
+    this.carService.filterCars().subscribe({
+      next: (res) => {
+        const allData = res.data;
+        if (!allData || allData.length === 0) {
+          this.triggerToast('Info', 'No data available to backup.');
+          return;
+        }
+  
+        const headers = ['Make', 'Model', 'MPG', 'Cylinders', 'Displacement', 'Horsepower', 'Weight', 'Acceleration', 'Year', 'Origin'];
+        
+        const csvRows = [
+          headers.join(','),
+          ...allData.map(car => [
+            `"${car.make}"`,
+            `"${car.model}"`,
+            car.mpg,
+            car.cylinders,
+            car.displacement,
+            car.horsepower,
+            car.weight,
+            car.acceleration,
+            car.model_year,
+            `"${car.origin}"`
+          ].join(','))
+        ];
+  
+        const csvContent = csvRows.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `registry_full_backup_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        this.triggerToast('Backup Complete', `Successfully exported ${allData.length} records.`);
+      },
+      error: (err) => {
+        this.triggerToast('Error', 'Failed to fetch backup data: ' + err.message);
+      }
+    });
+  }
 
   onLogout() {
     localStorage.removeItem('carRegistryFilters');

@@ -1,22 +1,15 @@
 <div class="dashboard">
   <header>
-    <div class="header-left">
-      <h1>John's Car Registry 
-        <span class="count-badge">{{ totalRecords }} Total Records</span>
-      </h1>
-    </div>
-    
-    <div class="header-right" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end;">
-      <div class="active-filters-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <ng-container *ngFor="let filter of getActiveFilterKeys()">
-          <div class="filter-chip" (click)="removeFilter(filter)"
-               style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; border: 1px solid #bfdbfe;">
-            <span>{{ formatLabel(filter) }}: {{ activeFilters[filter] }}</span>
-            <span style="font-size: 14px;">×</span>
-          </div>
-        </ng-container>
+    <h1>John's Car Registry <span class="count-badge">{{ totalRecords }} Records</span></h1>
+    <div class="header-right">
+      <div class="active-filters-list" *ngIf="isFiltering">
+        <div *ngFor="let key of getActiveFilterKeys()" class="filter-chip" (click)="removeFilter(key)">
+          <span class="chip-label">{{ formatLabel(key) }}:</span>
+          <span class="chip-value">{{ activeFilters[key] }}</span>
+          <span class="chip-icon">✕</span>
+        </div>
       </div>
-
+    
       <button class="page-btn" (click)="showFilterModal = true">
         🔍 Advanced Filter
       </button>
@@ -24,86 +17,118 @@
   </header>
 
   <div class="table-card">
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th (click)="setSort('make')" [class.sortable]="!isFiltering">Make</th>
-            <th (click)="setSort('model')" [class.sortable]="!isFiltering">Model</th>
-            <th>MPG</th>
-            <th>Cyl</th>
-            <th>Disp</th>
-            <th>HP</th>
-            <th>Weight</th>
-            <th>Acc</th>
-            <th>Year</th>
-            <th>Origin</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let car of cars">
-            <td class="primary-text">{{ car.make }}</td>
-            <td class="model-text">{{ car.model }}</td>
-            <td>{{ car.mpg }}</td>
-            <td>{{ car.cylinders }}</td>
-            <td>{{ car.displacement }}</td>
-            <td>{{ car.horsepower }}</td>
-            <td>{{ car.weight | number }}</td>
-            <td>{{ car.acceleration }}</td>
-            <td>{{ car.model_year }}</td>
-            <td class="origin-text">{{ car.origin }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <table>
+      <thead>
+        <tr>
+          <th *ngFor="let col of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year', 'origin']" 
+              (click)="setSort(col)" style="cursor: pointer;">
+            {{ formatLabel(col) | titlecase }}
+            <span *ngIf="sortColumn === col">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let car of displayCars">
+          <td>{{ car.make }}</td>
+          <td>{{ car.model }}</td>
+          <td>{{ car.mpg }}</td>
+          <td>{{ car.cylinders }}</td>
+          <td>{{ car.displacement }}</td>
+          <td>{{ car.horsepower }}</td>
+          <td>{{ car.weight | number }}</td>
+          <td>{{ car.acceleration }}</td>
+          <td>{{ car.model_year }}</td>
+          <td>{{ car.origin }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()" [disabled]="!isFiltering ? !nextPageToken : currentPage >= totalPages">Next</button>
     </div>
   </div>
-
   <div class="modal-backdrop" *ngIf="showFilterModal" (click)="showFilterModal = false">
-    <div class="filter-popup" (click)="$event.stopPropagation()">
+    <div class="filter-popup" (click)="$event.stopPropagation()" style="max-width: 800px;">
       <div class="popup-header">
         <h2>Advanced Filter</h2>
-        <p class="subtitle">Select one criteria to filter by</p>
+        <p class="subtitle">Search by any combination of specifications</p>
         <button class="close-x" (click)="showFilterModal = false">✕</button>
       </div>
       
       <div class="popup-body">
-        <div class="filter-grid">
-          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('make')">
+        <div class="filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+          
+          <div class="filter-input-group">
             <label>Make</label>
-            <input type="text" [(ngModel)]="tempFilters.make" [disabled]="isFieldDisabled('make')" placeholder="e.g. Dodge">
+            <input type="text" [(ngModel)]="tempFilters.make" placeholder="e.g. Toyota">
           </div>
-
-          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('model')">
+  
+          <div class="filter-input-group">
             <label>Model</label>
-            <input type="text" [(ngModel)]="tempFilters.model" [disabled]="isFieldDisabled('model')" placeholder="e.g. Magnum">
+            <input type="text" [(ngModel)]="tempFilters.model" placeholder="e.g. Corolla">
           </div>
-
-          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('model_year')">
-            <label>Year (YY)</label>
-            <input type="number" [(ngModel)]="tempFilters.model_year" [disabled]="isFieldDisabled('model_year')" placeholder="78">
-          </div>
-
-          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('cylinders')">
-            <label>Cylinders</label>
-            <input type="number" [(ngModel)]="tempFilters.cylinders" [disabled]="isFieldDisabled('cylinders')" placeholder="8">
-          </div>
-
-          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('origin')">
+  
+          <div class="filter-input-group">
             <label>Origin</label>
-            <select [(ngModel)]="tempFilters.origin" [disabled]="isFieldDisabled('origin')">
+            <select [(ngModel)]="tempFilters.origin">
               <option value="">All Regions</option>
               <option value="usa">USA</option>
               <option value="europe">Europe</option>
               <option value="japan">Japan</option>
             </select>
           </div>
+  
+          <div class="filter-input-group">
+            <label>Year (YYYY)</label>
+            <input 
+              type="number" 
+              [(ngModel)]="tempFilters.model_year" 
+              oninput="if(this.value.length > 4) this.value = this.value.slice(0, 4);"
+              min="1000" 
+              max="9999" 
+              placeholder="1978">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>Cylinders</label>
+            <input type="number" [(ngModel)]="tempFilters.cylinders" placeholder="e.g. 8">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>MPG</label>
+            <input type="number" [(ngModel)]="tempFilters.mpg" placeholder="e.g. 25">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>Horsepower</label>
+            <input type="number" [(ngModel)]="tempFilters.horsepower" placeholder="e.g. 150">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>Displacement</label>
+            <input type="number" [(ngModel)]="tempFilters.displacement" placeholder="e.g. 350">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>Weight (lbs)</label>
+            <input type="number" [(ngModel)]="tempFilters.weight" placeholder="e.g. 3500">
+          </div>
+  
+          <div class="filter-input-group">
+            <label>Acceleration</label>
+            <input type="number" [(ngModel)]="tempFilters.acceleration" placeholder="e.g. 12.0">
+          </div>
+  
         </div>
       </div>
-
+  
       <div class="popup-footer">
         <button class="btn-text" (click)="clearFilters()">Reset All</button>
-        <button class="page-btn" (click)="applyFilters()">Apply Filter</button>
+        <button class="page-btn" (click)="applyFilters()">Apply Filters</button>
       </div>
     </div>
   </div>
-</div>
+
+  </div>

@@ -330,3 +330,45 @@ select:disabled {
 input:disabled::placeholder {
   color: #cbd5e1;
 } 
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.active-filters-list {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgb(194, 218, 244);
+  border: 1px solid #dbeafe;
+  color: #1e3a8a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-chip:hover {
+  background-color: #fcfcfc;
+  border-color: hsl(232, 92%, 50%);
+  color: hwb(248 3% 7%);
+}
+
+.chip-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.chip-icon {
+  margin-left: 8px;
+  font-weight: bold;
+  opacity: 0.5;
+}

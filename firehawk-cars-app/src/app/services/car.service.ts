@@ -61,31 +61,17 @@ export class CarService {
     }
   }
 
-  filterCars(
-    sortBy: string,
-    direction: string,
-    limit: number,
-    lastDocId: string | null = null,
-    filters: any = {}
-  ): Observable<CarResponse> {
+  filterCars(): Observable<CarResponse> {
     try {
       const headers = this.getHeaders();
-      const body = {
-        sortBy,
-        direction,
-        limit,
-        lastDocId,
-        filters
-      };
-
-      return this.http.post<CarResponse>(`${this.API_URL}/filter-cars`, body, { headers }).pipe(
+      return this.http.post<CarResponse>(`${this.API_URL}/filter-cars`, {}, { headers }).pipe(
         catchError(this.handleError)
       );
     } catch (e) {
       return throwError(() => e);
     }
   }
-
+  
   private handleError(err: any) {
     console.error('CarService Error:', err);
     return throwError(() => err);

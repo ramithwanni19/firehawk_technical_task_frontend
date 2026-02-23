@@ -1,46 +1,56 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, user, signInWithEmailAndPassword, idToken } from '@angular/fire/auth'; 
+import { Auth, user, signInWithEmailAndPassword, idToken, onAuthStateChanged } from '@angular/fire/auth'; 
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private auth = inject(Auth);
   private router = inject(Router);
-
-  currentUser$ = user(this.auth);
-  private token: string | null = null;
+  currentUser$: Observable<any> = user(this.auth);
+  private token: string | null = localStorage.getItem('auth_token'); 
 
   constructor() {
-    // Keep the token updated automatically
-    idToken(this.auth).subscribe(t => {
+    idToken(this.auth).subscribe(async (t) => {
       this.token = t;
-      console.log('Token updated');
+      if (t) {
+        localStorage.setItem('auth_token', t);
+      } else {
+        localStorage.removeItem('auth_token');
+      }
+      console.log('Token sync complete');
     });
   }
 
   async login(email: string, pass: string) {
     try {
-      await signInWithEmailAndPassword(this.auth, email, pass);
+      const userCredential = await signInWithEmailAndPassword(this.auth, email, pass);
+      const token = await userCredential.user.getIdToken();
+      
+      this.token = token;
+      localStorage.setItem('auth_token', token);
+      
       this.router.navigate(['/dashboard']); 
+      return userCredential.user;
     } catch (error) {
       console.error('Login error:', error);
-      throw error; // Pass the error to the component to show a message
+      throw error; 
     }
   }
 
   async isLoggedIn(): Promise<boolean> {
-    // Wait for the first emission of the user observable
     const u = await firstValueFrom(this.currentUser$);
-    return !!u;
+    return !!u || !!localStorage.getItem('auth_token');
   }
 
   getToken() { 
-    return this.token; 
+    return this.token || localStorage.getItem('auth_token'); 
   }
 
   async logout() {
     await this.auth.signOut();
+    this.token = null;
+    localStorage.removeItem('auth_token');
     this.router.navigate(['/login']);
   }
 }

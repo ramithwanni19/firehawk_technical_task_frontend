@@ -25,11 +25,19 @@ export class LoginComponent {
     this.errorMessage = ''; 
     
     try {
-      await this.authService.login(this.email, this.password);
-      this.router.navigate(['/dashboard']);
+      const user = await this.authService.login(this.email, this.password);
+      if (user) {
+        this.router.navigate(['/dashboard']);
+      }
     } catch (error: any) {
       console.error('Login failed', error);
-      this.errorMessage = 'Invalid email or password. Please try again.';
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        this.errorMessage = 'Invalid email or password.';
+      } else if (error.code === 'auth/too-many-requests') {
+        this.errorMessage = 'Too many failed attempts. Try again later.';
+      } else {
+        this.errorMessage = 'Login failed. Please check your credentials.';
+      }
     }
   }
 }

@@ -1,9 +1,26 @@
-<div class="login-container">
-    <form (submit)="onLogin()">
-      <h2>🔒 Admin Login</h2>
-      <input type="email" [(ngModel)]="email" name="email" placeholder="Email" required>
-      <input type="password" [(ngModel)]="password" name="password" placeholder="Password" required>
-      <button type="submit">Login</button>
-      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <h2> Car Registry Login</h2>
+      <p class="subtitle">Enter your credentials to login</p>
+    </div>
+    
+    <form (submit)="onLogin()" class="login-body">
+      <div class="filter-input-group">
+        <label>Email Address</label>
+        <input type="email" [(ngModel)]="email" name="email" placeholder="admin@example.com" required>
+      </div>
+
+      <div class="filter-input-group">
+        <label>Password</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="login-submit-btn">Login</button>
+      
+      <p class="error-message" *ngIf="errorMessage">
+        <span class="error-icon">⚠️</span> {{ errorMessage }}
+      </p>
     </form>
   </div>
+</div>

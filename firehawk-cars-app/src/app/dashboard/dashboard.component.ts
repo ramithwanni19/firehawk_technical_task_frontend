@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CarService, Car } from '../services/car.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dashboard',
@@ -38,7 +39,7 @@ export class DashboardComponent implements OnInit {
   };
   activeFilters: any = {};
 
-  constructor(private carService: CarService) {}
+  constructor(private carService: CarService, private router: Router) {}
 
   ngOnInit() {
     this.loadSavedFilters(); // Load persisted filters from localStorage
@@ -210,5 +211,10 @@ export class DashboardComponent implements OnInit {
       acceleration: 'Acceleration'
     };
     return labels[key] || key;
+  }
+
+  onLogout() {
+    localStorage.removeItem('carRegistryFilters');
+    this.router.navigate(['/login']);
   }
 }

@@ -1,6 +1,6 @@
 <div class="dashboard">
   <header>
-    <h1>John's Car Registry <span class="count-badge">{{ totalRecords }} Records</span></h1>
+    <h1>John's Car Registry <span class="count-badge">{{ totalRecords }} of Total Records</span></h1>
     <div class="header-right">
       <div class="active-filters-list" *ngIf="isFiltering">
         <div *ngFor="let key of getActiveFilterKeys()" class="filter-chip" (click)="removeFilter(key)">
@@ -12,6 +12,9 @@
     
       <button class="page-btn" (click)="showFilterModal = true">
         🔍 Advanced Filter
+      </button>
+      <button class="logout-btn" (click)="onLogout()">
+        Sign Out
       </button>
     </div>
   </header>

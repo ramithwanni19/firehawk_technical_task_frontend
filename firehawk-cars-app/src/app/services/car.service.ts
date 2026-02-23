@@ -76,4 +76,22 @@ export class CarService {
     console.error('CarService Error:', err);
     return throwError(() => err);
   }
+
+  addCar(carData: Car): Observable<Car> {
+    try {
+      const headers = this.getHeaders();
+      return this.http.post<Car>(`${this.API_URL}/add-car`, carData, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    } catch (e) {
+      return throwError(() => e);
+    }
+  }
+
+  deleteCar(id: string): Observable<any> {
+    const headers = this.getHeaders();
+    return this.http.delete(`${this.API_URL}/delete-car/${id}`, { headers }).pipe(
+      catchError(this.handleError)
+    );
+  }
 }

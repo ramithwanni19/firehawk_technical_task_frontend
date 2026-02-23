@@ -21,44 +21,68 @@ export class DashboardComponent implements OnInit {
   sortColumn: string = 'make';      
   sortDirection: 'asc' | 'desc' = 'asc';
   showFilterModal: boolean = false;
+  addRecordModal: boolean = false;
+  globalSearchTerm: string = '';
+  showToast: boolean = false;
+  toastTitle: string = '';
+  toastDesc: string = '';
+  showDeleteModal: boolean = false;
+  carToDelete: Car | null = null;
   
   nextPageToken: string | null = null;
   pageHistory: (string | null)[] = []; 
 
-  tempFilters: any = {
-    make: '', 
-    model: '', 
-    model_year: '', 
-    cylinders: '',
-    mpg: '', 
-    displacement: '', 
-    horsepower: '',
-    weight: '', 
-    acceleration: '', 
-    origin: ''
-  };
+  tempFilters: any = this.initFilters();
   activeFilters: any = {};
+  newCar: any = this.initNewCar();
 
   constructor(private carService: CarService, private router: Router) {}
 
   ngOnInit() {
-    this.loadSavedFilters(); // Load persisted filters from localStorage
+    this.loadSavedFilters(); 
     this.loadData();
   }
 
+  initFilters() {
+    return {
+      make: '', model: '', model_year: '', cylinders: '',
+      mpg: '', displacement: '', horsepower: '',
+      weight: '', acceleration: '', origin: ''
+    };
+  }
+
+  initNewCar() {
+    return {
+      make: '', model: '', mpg: null, cylinders: null,
+      displacement: null, horsepower: null, weight: null,
+      acceleration: null, model_year: null, origin: 'usa'
+    };
+  }
+
   private saveFiltersToStorage() {
-    localStorage.setItem('carRegistryFilters', JSON.stringify(this.activeFilters));
+    const dataToSave = {
+      active: this.activeFilters,
+      global: this.globalSearchTerm
+    };
+    localStorage.setItem('carRegistryFilters', JSON.stringify(dataToSave));
   }
 
   private loadSavedFilters() {
     const saved = localStorage.getItem('carRegistryFilters');
     if (saved) {
-      this.activeFilters = JSON.parse(saved);
-      this.tempFilters = { ...this.tempFilters, ...this.activeFilters };
+      const parsed = JSON.parse(saved);
+      this.activeFilters = parsed.active || {};
+      this.globalSearchTerm = parsed.global || '';
+      this.tempFilters = { ...this.initFilters(), ...this.activeFilters };
     }
   }
+
+  get isFormInvalid(): boolean {
+    return Object.values(this.newCar).some(val => val === '' || val === null || val === undefined);
+  }
+
   get isFiltering(): boolean {
-    return Object.keys(this.activeFilters).length > 0;
+    return Object.keys(this.activeFilters).length > 0 || this.globalSearchTerm.length > 0;
   }
 
   loadData() {
@@ -94,6 +118,13 @@ export class DashboardComponent implements OnInit {
           }
         });
 
+        if (this.globalSearchTerm.trim()) {
+          const term = this.globalSearchTerm.toLowerCase().trim();
+          results = results.filter((car: any) => 
+            Object.values(car).some(value => String(value).toLowerCase().includes(term))
+          );
+        }
+
         results.sort((a: any, b: any) => {
           const valA = a[this.sortColumn];
           const valB = b[this.sortColumn];
@@ -103,7 +134,7 @@ export class DashboardComponent implements OnInit {
 
         this.filteredMaster = results;
         this.totalRecords = results.length;
-        this.paginateFrontend(); 
+        this.paginateFrontend();
       }
     });
   }
@@ -114,58 +145,97 @@ export class DashboardComponent implements OnInit {
     this.displayCars = this.filteredMaster.slice(start, end);
   }
 
-  nextPage() {
-    if (!this.isFiltering && this.nextPageToken) {
-      const currentFirstId = this.displayCars[0]?.id ?? null;
-      this.pageHistory.push(currentFirstId);
-      this.currentPage++;
-      this.loadBackendData(this.nextPageToken);
-    } else if (this.isFiltering && this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.paginateFrontend();
-    }
+  saveNewRecord() {
+    if (this.isFormInvalid) return;
+    this.carService.filterCars().subscribe({
+      next: (res) => {
+        const allCars = res.data;
+        const keysToCheck = ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year', 'origin'];
+  
+        const isDuplicate = allCars.some(existingCar => 
+          keysToCheck.every(key => 
+            String(existingCar[key as keyof Car] || '').toLowerCase().trim() === 
+            String(this.newCar[key] || '').toLowerCase().trim()
+          )
+        );
+  
+        if (isDuplicate) {
+          alert('John, this exact record already exists!');
+          return;
+        }
+        this.carService.addCar(this.newCar).subscribe({
+          next: (savedCar) => {
+            this.displayCars = [savedCar, ...this.displayCars];
+            
+            if (this.isFiltering) {
+              this.filteredMaster = [savedCar, ...this.filteredMaster];
+            }
+  
+            this.totalRecords++;
+            this.triggerToast('Sucess','New car record added to registry.!');
+            this.newCar = this.initNewCar(); 
+            this.addRecordModal = false;    
+          },
+          error: (err) => alert('Error saving to server: ' + err.message)
+        });
+      }
+    });
   }
 
-  prevPage() {
-    if (!this.isFiltering && this.currentPage > 1) {
-      const prevId = this.pageHistory.pop() ?? null;
-      this.currentPage--;
-      this.loadBackendData(prevId);
-    } else if (this.isFiltering && this.currentPage > 1) {
-      this.currentPage--;
-      this.paginateFrontend();
-    }
+  onDelete(car: Car) {
+    if (!car.id) return;
+    this.carToDelete = car;
+    this.showDeleteModal = true;
+  }
+  
+  confirmDelete() {
+    if (!this.carToDelete || !this.carToDelete.id) return;
+  
+    const id = this.carToDelete.id;
+  
+    this.carService.deleteCar(id).subscribe({
+      next: () => {
+        this.displayCars = this.displayCars.filter(c => c.id !== id);
+        if (this.isFiltering) {
+          this.filteredMaster = this.filteredMaster.filter(c => c.id !== id);
+        }
+        this.totalRecords--;
+        this.triggerToast('Success', 'Car record deleted from the registry.');
+        this.closeModal();
+      },
+      error: (err) => {
+        this.triggerToast('Error', 'Delete failed: ' + err.message);
+        this.closeModal();
+      }
+    });
+  }
+  
+  closeModal() {
+    this.showDeleteModal = false;
+    this.carToDelete = null;
   }
 
-  setSort(column: string) {
-    if (this.sortColumn === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortColumn = column;
-      this.sortDirection = 'asc';
-    }
+  onGlobalSearch() {
     this.currentPage = 1;
-    this.pageHistory = [];
-    
-    if (this.isFiltering) {
-      this.loadFilteredData(); 
-    } else {
-      this.loadBackendData();
-    }
+    this.saveFiltersToStorage();
+    this.loadData();
+  }
+
+  clearGlobalSearch() {
+    this.globalSearchTerm = '';
+    this.saveFiltersToStorage();
+    this.currentPage = 1;
+    this.loadData();
   }
 
   applyFilters() {
     this.activeFilters = {};
     Object.keys(this.tempFilters).forEach(key => {
-      if (this.tempFilters[key]) {
-        this.activeFilters[key] = this.tempFilters[key];
-      }
+      if (this.tempFilters[key]) this.activeFilters[key] = this.tempFilters[key];
     });
-
-    this.saveFiltersToStorage(); // Persist to browser
+    this.saveFiltersToStorage();
     this.showFilterModal = false;
     this.currentPage = 1;
-    this.pageHistory = [];
     this.loadData();
   }
 
@@ -178,39 +248,64 @@ export class DashboardComponent implements OnInit {
   }
 
   clearFilters() {
-    this.tempFilters = { 
-      make: '', model: '', model_year: '', cylinders: '', 
-      mpg: '', displacement: '', horsepower: '', 
-      weight: '', acceleration: '', origin: '' 
-    };
+    this.globalSearchTerm = '';
+    this.tempFilters = this.initFilters();
     this.activeFilters = {};
     localStorage.removeItem('carRegistryFilters');
     this.currentPage = 1;
     this.loadData();
   }
 
-  get totalPages(): number { 
-    return Math.ceil(this.totalRecords / this.pageSize) || 1; 
+  setSort(column: string) {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.currentPage = 1;
+    this.loadData();
   }
 
-  getActiveFilterKeys() { 
-    return Object.keys(this.activeFilters); 
+  nextPage() {
+    if (!this.isFiltering && this.nextPageToken) {
+      this.pageHistory.push(this.displayCars[0]?.id?.toString() || null);
+      this.currentPage++;
+      this.loadBackendData(this.nextPageToken);
+    } else if (this.isFiltering && this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.paginateFrontend();
+    }
   }
+
+  prevPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      if (!this.isFiltering) {
+        const prevId = this.pageHistory.pop() || null;
+        this.loadBackendData(prevId);
+      } else {
+        this.paginateFrontend();
+      }
+    }
+  }
+
+  get totalPages(): number { return Math.ceil(this.totalRecords / this.pageSize) || 1; }
+  getActiveFilterKeys() { return Object.keys(this.activeFilters); }
   
   formatLabel(key: string): string {
-    const labels: any = { 
-      make: 'Make', 
-      model: 'Model', 
-      model_year: 'Year', 
-      origin: 'Origin',
-      mpg: 'MPG',
-      cylinders: 'Cylinders',
-      displacement: 'Displacement',
-      horsepower: 'Horsepower',
-      weight: 'Weight',
-      acceleration: 'Acceleration'
-    };
-    return labels[key] || key;
+    const labels: any = { model_year: 'Year' };
+    return labels[key] || key.charAt(0).toUpperCase() + key.slice(1);
+  }
+
+  triggerToast(title: string, message: string) {
+    this.toastTitle = title;
+    this.toastDesc = message;
+    this.showToast = true;
+
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
   }
 
   onLogout() {

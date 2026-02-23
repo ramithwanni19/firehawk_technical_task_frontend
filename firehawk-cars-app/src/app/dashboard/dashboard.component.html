@@ -1,14 +1,15 @@
 <div class="dashboard">
   <header>
     <div class="header-left">
-      <h1>Firehawk Car Registry <span class="count-badge">{{ cars.length }} Results</span></h1>
+      <h1>John's Car Registry 
+        <span class="count-badge">{{ totalRecords }} Total Records</span>
+      </h1>
     </div>
     
     <div class="header-right" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end;">
       <div class="active-filters-list" style="display: flex; gap: 8px; flex-wrap: wrap;">
         <ng-container *ngFor="let filter of getActiveFilterKeys()">
-          <div class="filter-chip" 
-               (click)="removeFilter(filter)"
+          <div class="filter-chip" (click)="removeFilter(filter)"
                style="background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; border: 1px solid #bfdbfe;">
             <span>{{ formatLabel(filter) }}: {{ activeFilters[filter] }}</span>
             <span style="font-size: 14px;">×</span>
@@ -45,76 +46,16 @@
                 </div>
               </div>
             </th>
-            <th (click)="setSort('mpg')" class="col-data sortable">
+            <th *ngFor="let col of [{id:'mpg', n:'MPG'}, {id:'cylinders', n:'Cyl'}, {id:'displacement', n:'Disp'}, {id:'horsepower', n:'HP'}, {id:'weight', n:'Weight'}, {id:'acceleration', n:'Acc'}, {id:'model_year', n:'Year'}]" 
+                (click)="setSort(col.id)" class="col-data sortable">
               <div class="th-content">
-                <span>MPG</span>
+                <span>{{col.n}}</span>
                 <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'mpg' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'mpg' && sortDirection === 'desc'">▼</span>
+                  <span class="arrow" [class.highlight]="sortColumn === col.id && sortDirection === 'asc'">▲</span>
+                  <span class="arrow" [class.highlight]="sortColumn === col.id && sortDirection === 'desc'">▼</span>
                 </div>
               </div>
             </th>
-            
-            <th (click)="setSort('cylinders')" class="col-data sortable">
-              <div class="th-content">
-                <span>Cyl</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'cylinders' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'cylinders' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
-            <th (click)="setSort('displacement')" class="col-data sortable">
-              <div class="th-content">
-                <span>Disp</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'displacement' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'displacement' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
-            <th (click)="setSort('horsepower')" class="col-data sortable">
-              <div class="th-content">
-                <span>HP</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'horsepower' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'horsepower' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
-            <th (click)="setSort('weight')" class="col-data sortable">
-              <div class="th-content">
-                <span>Weight</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'weight' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'weight' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
-            <th (click)="setSort('acceleration')" class="col-data sortable">
-              <div class="th-content">
-                <span>Acc</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'acceleration' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'acceleration' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
-            <th (click)="setSort('model_year')" class="col-data sortable">
-              <div class="th-content">
-                <span>Year</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'model_year' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'model_year' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            
             <th (click)="setSort('origin')" class="col-origin sortable">
               <div class="th-content">
                 <span>Origin</span>
@@ -141,7 +82,7 @@
           </tr>
           <tr *ngIf="cars.length === 0">
             <td colspan="10" style="text-align: center; padding: 40px; color: #64748b;">
-              No matching records found in the database.
+              No matching records found.
             </td>
           </tr>
         </tbody>
@@ -150,63 +91,56 @@
 
     <div class="table-footer">
       <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
-      <div class="page-info">Page <strong>{{ currentPage }}</strong></div>
+      <div class="page-info">
+        Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
+        <span style="margin-left: 12px; font-size: 0.8rem; opacity: 0.7;">(Showing {{ cars.length }} results)</span>
+      </div>
       <button class="page-btn" (click)="nextPage()" [disabled]="!nextPageToken">Next</button>
     </div>
   </div>
 
   <div class="modal-backdrop" *ngIf="showFilterModal">
-    <div class="filter-popup" style="max-width: 500px;">
+    <div class="filter-popup">
       <div class="popup-header">
         <h2>Advanced Filter</h2>
         <button class="close-x" (click)="showFilterModal = false">✕</button>
       </div>
       
-      <div class="popup-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-height: 70vh; overflow-y: auto; padding: 20px;">
-        <div class="filter-input-group">
-          <label>Make</label>
-          <input type="text" [(ngModel)]="tempFilters.make" placeholder="e.g. Dodge">
-        </div>
-        <div class="filter-input-group">
-          <label>Model</label>
-          <input type="text" [(ngModel)]="tempFilters.model" placeholder="e.g. Magnum">
-        </div>
-        <div class="filter-input-group">
-          <label>Year (YY)</label>
-          <input type="number" [(ngModel)]="tempFilters.model_year" placeholder="78">
-        </div>
-        <div class="filter-input-group">
-          <label>Cylinders</label>
-          <input type="number" [(ngModel)]="tempFilters.cylinders" placeholder="8">
-        </div>
-        <div class="filter-input-group">
-          <label>Min MPG</label>
-          <input type="number" [(ngModel)]="tempFilters.mpg" placeholder="17.5">
-        </div>
-        <div class="filter-input-group">
-          <label>Horsepower</label>
-          <input type="number" [(ngModel)]="tempFilters.horsepower" placeholder="140">
-        </div>
-        <div class="filter-input-group">
-          <label>Displacement</label>
-          <input type="number" [(ngModel)]="tempFilters.displacement" placeholder="318">
-        </div>
-        <div class="filter-input-group">
-          <label>Weight</label>
-          <input type="number" [(ngModel)]="tempFilters.weight" placeholder="4080">
-        </div>
-        <div class="filter-input-group">
-          <label>Acceleration</label>
-          <input type="number" [(ngModel)]="tempFilters.acceleration" placeholder="13.7">
-        </div>
-        <div class="filter-input-group">
-          <label>Origin</label>
-          <select [(ngModel)]="tempFilters.origin" style="width: 100%; padding: 8px; border-radius: 8px; border: 2px solid #bfdbfe;">
-            <option value="">All Regions</option>
-            <option value="usa">USA</option>
-            <option value="europe">Europe</option>
-            <option value="japan">Japan</option>
-          </select>
+      <div class="popup-body">
+        <div class="filter-grid">
+          <div class="filter-input-group">
+            <label>Make</label>
+            <input type="text" [(ngModel)]="tempFilters.make" placeholder="e.g. Dodge">
+          </div>
+          <div class="filter-input-group">
+            <label>Model</label>
+            <input type="text" [(ngModel)]="tempFilters.model" placeholder="e.g. Magnum">
+          </div>
+          <div class="filter-input-group">
+            <label>Year (YY)</label>
+            <input type="number" [(ngModel)]="tempFilters.model_year" placeholder="78">
+          </div>
+          <div class="filter-input-group">
+            <label>Cylinders</label>
+            <input type="number" [(ngModel)]="tempFilters.cylinders" placeholder="8">
+          </div>
+          <div class="filter-input-group">
+            <label>Min MPG</label>
+            <input type="number" [(ngModel)]="tempFilters.mpg" placeholder="17.5">
+          </div>
+          <div class="filter-input-group">
+            <label>Horsepower</label>
+            <input type="number" [(ngModel)]="tempFilters.horsepower" placeholder="140">
+          </div>
+          <div class="filter-input-group">
+            <label>Origin</label>
+            <select [(ngModel)]="tempFilters.origin">
+              <option value="">All Regions</option>
+              <option value="usa">USA</option>
+              <option value="europe">Europe</option>
+              <option value="japan">Japan</option>
+            </select>
+          </div>
         </div>
       </div>
 

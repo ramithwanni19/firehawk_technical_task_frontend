@@ -17,6 +17,7 @@ export class DashboardComponent implements OnInit {
   
   currentPage: number = 1;
   pageSize: number = 10;
+  totalRecords: number = 0;
   sortColumn: string = 'make'; 
   sortDirection: 'asc' | 'desc' = 'asc';
 
@@ -52,11 +53,16 @@ export class DashboardComponent implements OnInit {
       this.activeFilters
     ).subscribe({
       next: (response) => {
-        this.cars = response.data || [];
-        this.nextPageToken = response.nextPageToken || null;
+        this.cars = response.data;
+        this.totalRecords = response.totalRecords;
+        this.nextPageToken = response.nextPageToken;
       },
       error: (err) => console.error('Backend search error:', err)
     });
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.totalRecords / this.pageSize) || 1;
   }
 
   setSort(column: string) {
@@ -70,10 +76,12 @@ export class DashboardComponent implements OnInit {
   }
 
   applyFilters() {
-    this.activeFilters = { ...this.tempFilters };
-    
-    Object.keys(this.activeFilters).forEach(key => {
-      if (this.activeFilters[key] === '') delete this.activeFilters[key];
+    this.activeFilters = {};
+    Object.keys(this.tempFilters).forEach(key => {
+      const val = this.tempFilters[key];
+      if (val !== '' && val !== null && val !== undefined) {
+        this.activeFilters[key] = typeof val === 'string' ? val.trim() : val;
+      }
     });
 
     this.showFilterModal = false;
@@ -81,8 +89,38 @@ export class DashboardComponent implements OnInit {
   }
 
   clearFilters() {
-    this.tempFilters = { make: '', model: '', year: '', cylinders: '', origin: '' };
+    this.tempFilters = {
+      make: '', model: '', model_year: '', cylinders: '',
+      mpg: '', displacement: '', horsepower: '',
+      weight: '', acceleration: '', origin: ''
+    };
     this.applyFilters();
+  }
+
+  removeFilter(key: string) {
+    delete this.activeFilters[key];
+    this.tempFilters[key] = '';
+    this.resetPagination();
+  }
+
+  getActiveFilterKeys(): string[] {
+    return Object.keys(this.activeFilters);
+  }
+
+  formatLabel(key: string): string {
+    const labels: any = {
+      make: 'Make',
+      model: 'Model',
+      model_year: 'Year',
+      cylinders: 'Cyl',
+      mpg: 'MPG',
+      horsepower: 'HP',
+      displacement: 'Disp',
+      weight: 'Weight',
+      acceleration: 'Acc',
+      origin: 'Origin'
+    };
+    return labels[key] || key;
   }
 
   nextPage() {
@@ -107,34 +145,4 @@ export class DashboardComponent implements OnInit {
     this.pageHistory = [];
     this.loadCars();
   }
-
-  get filteredCars(): Car[] {
-    return this.cars;
-  }
-
-getActiveFilterKeys(): string[] {
-  return Object.keys(this.activeFilters);
-}
-
-formatLabel(key: string): string {
-  const labels: any = {
-    make: 'Make',
-    model: 'Model',
-    model_year: 'Year',
-    cylinders: 'Cyl',
-    mpg: 'MPG',
-    horsepower: 'HP',
-    displacement: 'Disp',
-    weight: 'Weight',
-    acceleration: 'Acc',
-    origin: 'Origin'
-  };
-  return labels[key] || key;
-}
-
-removeFilter(key: string) {
-  delete this.activeFilters[key];
-  this.tempFilters[key] = '';
-  this.resetPagination();
-}
 }

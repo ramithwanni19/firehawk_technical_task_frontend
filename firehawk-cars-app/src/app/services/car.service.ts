@@ -16,11 +16,13 @@ export interface Car {
   weight: number;         
   acceleration: number;   
   origin: string;
+  make_lowercase?: string;
 }
 
 interface CarResponse {
   data: Car[];
   nextPageToken: string | null;
+  totalRecords: number;
 }
 
 @Injectable({

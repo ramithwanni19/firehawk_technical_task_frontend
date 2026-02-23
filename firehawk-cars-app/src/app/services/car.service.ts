@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs'; 
-import { switchMap, catchError } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs'; 
+import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export interface Car {
   id?: string;
   make: string;
   model: string;
-  year: number;
+  model_year: number;
   mpg: number;
   cylinders: number;      
   displacement: number;   
@@ -16,10 +16,9 @@ export interface Car {
   weight: number;         
   acceleration: number;   
   origin: string;
-  make_lowercase?: string;
 }
 
-interface CarResponse {
+export interface CarResponse {
   data: Car[];
   nextPageToken: string | null;
   totalRecords: number;
@@ -33,45 +32,62 @@ export class CarService {
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    if (!token) throw new Error('No authentication token found.');
+    return new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+  }
+
   getCars(
     sortBy: string, 
     direction: string, 
     limit: number, 
-    lastDocId: string | null = null, 
+    lastDocId: string | null = null
+  ): Observable<CarResponse> {
+    try {
+      const headers = this.getHeaders();
+      let params = new HttpParams()
+        .set('sortBy', sortBy)
+        .set('direction', direction)
+        .set('limit', limit.toString());
+    
+      if (lastDocId) params = params.set('lastDocId', lastDocId);
+
+      return this.http.get<CarResponse>(`${this.API_URL}/all-cars`, { headers, params }).pipe(
+        catchError(this.handleError)
+      );
+    } catch (e) {
+      return throwError(() => e);
+    }
+  }
+
+  filterCars(
+    sortBy: string,
+    direction: string,
+    limit: number,
+    lastDocId: string | null = null,
     filters: any = {}
   ): Observable<CarResponse> {
-    
-    return of(this.authService.getToken()).pipe(
-      switchMap(token => {
-        if (!token) {
-          return throwError(() => new Error('No authentication token found.'));
-        }
-        
-        const headers = new HttpHeaders({
-          'Authorization': `Bearer ${token}`
-        });
+    try {
+      const headers = this.getHeaders();
+      const body = {
+        sortBy,
+        direction,
+        limit,
+        lastDocId,
+        filters
+      };
 
-        let params = new HttpParams()
-          .set('sortBy', sortBy)
-          .set('direction', direction)
-          .set('limit', limit.toString());
-      
-        if (lastDocId) {
-          params = params.set('lastDocId', lastDocId);
-        }
-      
-        Object.keys(filters).forEach(key => {
-          if (filters[key] !== undefined && filters[key] !== null && filters[key] !== '') {
-            params = params.set(key, filters[key].toString());
-          }
-        });
+      return this.http.post<CarResponse>(`${this.API_URL}/filter-cars`, body, { headers }).pipe(
+        catchError(this.handleError)
+      );
+    } catch (e) {
+      return throwError(() => e);
+    }
+  }
 
-        return this.http.get<CarResponse>(`${this.API_URL}/all-cars`, { headers, params });
-      }),
-      catchError(err => {
-        console.error('CarService Error:', err);
-        return throwError(() => err);
-      })
-    );
+  private handleError(err: any) {
+    console.error('CarService Error:', err);
+    return throwError(() => err);
   }
 }

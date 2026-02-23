@@ -12,17 +12,14 @@ import { CarService, Car } from '../services/car.service';
 })
 export class DashboardComponent implements OnInit {
   cars: Car[] = [];
+  totalRecords: number = 0;
   nextPageToken: string | null = null;
-  pageHistory: string[] = [];
-  
+  pageHistory: string[] = []; 
   currentPage: number = 1;
   pageSize: number = 10;
-  totalRecords: number = 0;
-  sortColumn: string = 'make'; 
+  sortColumn: string = ''; 
   sortDirection: 'asc' | 'desc' = 'asc';
-
   showFilterModal: boolean = false;
-
   tempFilters: any = {
     make: '',
     model: '',
@@ -35,7 +32,6 @@ export class DashboardComponent implements OnInit {
     acceleration: '',
     origin: ''
   };
-
   activeFilters: any = {};
 
   constructor(private carService: CarService) {}
@@ -43,29 +39,42 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.loadCars();
   }
+  get isFiltering(): boolean {
+    return Object.keys(this.activeFilters).length > 0;
+  }
+  loadCars(pageToken?: string | null) {
+    const filtering = this.isFiltering;
 
-  loadCars(pageToken?: string) {
-    this.carService.getCars(
-      this.sortColumn, 
-      this.sortDirection, 
-      this.pageSize, 
-      pageToken, 
-      this.activeFilters
-    ).subscribe({
+    const carObservable = filtering
+      ? this.carService.filterCars(
+          '',               
+          'asc', 
+          this.pageSize,
+          pageToken,
+          this.activeFilters
+        )
+      : this.carService.getCars(
+          this.sortColumn,  
+          this.sortDirection,
+          this.pageSize,
+          pageToken
+        );
+
+    carObservable.subscribe({
       next: (response) => {
         this.cars = response.data;
         this.totalRecords = response.totalRecords;
         this.nextPageToken = response.nextPageToken;
       },
-      error: (err) => console.error('Backend search error:', err)
+      error: (err) => {
+        console.error('Error fetching car data:', err);
+      }
     });
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.totalRecords / this.pageSize) || 1;
-  }
-
   setSort(column: string) {
+    if (this.isFiltering) return;
+
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -123,6 +132,10 @@ export class DashboardComponent implements OnInit {
     return labels[key] || key;
   }
 
+  get totalPages(): number {
+    return Math.ceil(this.totalRecords / this.pageSize) || 1;
+  }
+
   nextPage() {
     if (this.nextPageToken) {
       const currentFirstId = this.cars[0]?.id;
@@ -143,6 +156,16 @@ export class DashboardComponent implements OnInit {
   resetPagination() {
     this.currentPage = 1;
     this.pageHistory = [];
+    this.nextPageToken = null;
     this.loadCars();
+  }
+
+  isFieldDisabled(fieldName: string): boolean {
+    return Object.keys(this.tempFilters).some(key => 
+      key !== fieldName && 
+      this.tempFilters[key] !== null && 
+      this.tempFilters[key] !== '' && 
+      this.tempFilters[key] !== undefined
+    );
   }
 }

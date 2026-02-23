@@ -28,43 +28,16 @@
       <table>
         <thead>
           <tr>
-            <th (click)="setSort('make')" class="col-make sortable">
-              <div class="th-content">
-                <span>Make</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'make' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'make' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            <th (click)="setSort('model')" class="col-model sortable">
-              <div class="th-content">
-                <span>Model</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'model' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'model' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            <th *ngFor="let col of [{id:'mpg', n:'MPG'}, {id:'cylinders', n:'Cyl'}, {id:'displacement', n:'Disp'}, {id:'horsepower', n:'HP'}, {id:'weight', n:'Weight'}, {id:'acceleration', n:'Acc'}, {id:'model_year', n:'Year'}]" 
-                (click)="setSort(col.id)" class="col-data sortable">
-              <div class="th-content">
-                <span>{{col.n}}</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === col.id && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === col.id && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
-            <th (click)="setSort('origin')" class="col-origin sortable">
-              <div class="th-content">
-                <span>Origin</span>
-                <div class="sort-indicator">
-                  <span class="arrow" [class.highlight]="sortColumn === 'origin' && sortDirection === 'asc'">▲</span>
-                  <span class="arrow" [class.highlight]="sortColumn === 'origin' && sortDirection === 'desc'">▼</span>
-                </div>
-              </div>
-            </th>
+            <th (click)="setSort('make')" [class.sortable]="!isFiltering">Make</th>
+            <th (click)="setSort('model')" [class.sortable]="!isFiltering">Model</th>
+            <th>MPG</th>
+            <th>Cyl</th>
+            <th>Disp</th>
+            <th>HP</th>
+            <th>Weight</th>
+            <th>Acc</th>
+            <th>Year</th>
+            <th>Origin</th>
           </tr>
         </thead>
         <tbody>
@@ -77,64 +50,47 @@
             <td>{{ car.horsepower }}</td>
             <td>{{ car.weight | number }}</td>
             <td>{{ car.acceleration }}</td>
-            <td>{{ car.year }}</td>
+            <td>{{ car.model_year }}</td>
             <td class="origin-text">{{ car.origin }}</td>
-          </tr>
-          <tr *ngIf="cars.length === 0">
-            <td colspan="10" style="text-align: center; padding: 40px; color: #64748b;">
-              No matching records found.
-            </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <div class="table-footer">
-      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
-      <div class="page-info">
-        Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
-        <span style="margin-left: 12px; font-size: 0.8rem; opacity: 0.7;">(Showing {{ cars.length }} results)</span>
-      </div>
-      <button class="page-btn" (click)="nextPage()" [disabled]="!nextPageToken">Next</button>
-    </div>
   </div>
 
-  <div class="modal-backdrop" *ngIf="showFilterModal">
-    <div class="filter-popup">
+  <div class="modal-backdrop" *ngIf="showFilterModal" (click)="showFilterModal = false">
+    <div class="filter-popup" (click)="$event.stopPropagation()">
       <div class="popup-header">
         <h2>Advanced Filter</h2>
+        <p class="subtitle">Select one criteria to filter by</p>
         <button class="close-x" (click)="showFilterModal = false">✕</button>
       </div>
       
       <div class="popup-body">
         <div class="filter-grid">
-          <div class="filter-input-group">
+          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('make')">
             <label>Make</label>
-            <input type="text" [(ngModel)]="tempFilters.make" placeholder="e.g. Dodge">
+            <input type="text" [(ngModel)]="tempFilters.make" [disabled]="isFieldDisabled('make')" placeholder="e.g. Dodge">
           </div>
-          <div class="filter-input-group">
+
+          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('model')">
             <label>Model</label>
-            <input type="text" [(ngModel)]="tempFilters.model" placeholder="e.g. Magnum">
+            <input type="text" [(ngModel)]="tempFilters.model" [disabled]="isFieldDisabled('model')" placeholder="e.g. Magnum">
           </div>
-          <div class="filter-input-group">
+
+          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('model_year')">
             <label>Year (YY)</label>
-            <input type="number" [(ngModel)]="tempFilters.model_year" placeholder="78">
+            <input type="number" [(ngModel)]="tempFilters.model_year" [disabled]="isFieldDisabled('model_year')" placeholder="78">
           </div>
-          <div class="filter-input-group">
+
+          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('cylinders')">
             <label>Cylinders</label>
-            <input type="number" [(ngModel)]="tempFilters.cylinders" placeholder="8">
+            <input type="number" [(ngModel)]="tempFilters.cylinders" [disabled]="isFieldDisabled('cylinders')" placeholder="8">
           </div>
-          <div class="filter-input-group">
-            <label>Min MPG</label>
-            <input type="number" [(ngModel)]="tempFilters.mpg" placeholder="17.5">
-          </div>
-          <div class="filter-input-group">
-            <label>Horsepower</label>
-            <input type="number" [(ngModel)]="tempFilters.horsepower" placeholder="140">
-          </div>
-          <div class="filter-input-group">
+
+          <div class="filter-input-group" [class.disabled-group]="isFieldDisabled('origin')">
             <label>Origin</label>
-            <select [(ngModel)]="tempFilters.origin">
+            <select [(ngModel)]="tempFilters.origin" [disabled]="isFieldDisabled('origin')">
               <option value="">All Regions</option>
               <option value="usa">USA</option>
               <option value="europe">Europe</option>
@@ -146,7 +102,7 @@
 
       <div class="popup-footer">
         <button class="btn-text" (click)="clearFilters()">Reset All</button>
-        <button class="page-btn" (click)="applyFilters()">Apply Filters</button>
+        <button class="page-btn" (click)="applyFilters()">Apply Filter</button>
       </div>
     </div>
   </div>

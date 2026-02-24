@@ -14,50 +14,54 @@
     </div>
   </div>
 
-  <header>
-    <h1>John's Car Registry <span class="count-badge">{{ totalRecords }} Records</span></h1>
+<header class="management-card">
+  <div class="card-row top-bar">
+    <div class="brand-section">
+      <h1>John's Car Registry</h1>
+      <span class="count-badge">{{ totalRecords }} Records</span>
+    </div>
 
-    <div class="header-controls">
+    <div class="action-group">
+      <button class="page-btn highlight-btn" (click)="addRecordModal = true">
+        + Add Record
+      </button>
+      <button class="page-btn backup-btn" (click)="backupAllData()" title="Download Full CSV Backup">
+        📥 Backup Registry
+      </button>
       <button class="logout-btn" (click)="onLogout()">Sign Out</button>
+    </div>
+  </div>
 
-      <div class="search-row">
-        <div class="active-filters-list" *ngIf="isFiltering">
-          <div *ngFor="let key of getActiveFilterKeys() | slice:0:5" class="filter-chip" (click)="removeFilter(key)"
-            role="button" title="Remove filter">
-            <span class="chip-label">{{ formatLabel(key) }}:</span>
-            <span class="chip-value">{{ activeFilters[key] }}</span>
-            <span class="chip-icon" aria-hidden="true">✕</span>
-          </div>
+  <hr class="card-divider">
 
-          <div class="filter-chip more-indicator" *ngIf="getActiveFilterKeys().length > 5"
-            (click)="showFilterModal = true" title="See all filters">
-            <span class="chip-label">...</span>
-          </div>
-        </div>
-
-        <button class="page-btn highlight-btn" (click)="showFilterModal = true">
-          🔍 Advanced Filter
-        </button>
-      </div>
-
+  <div class="card-row controls-bar">
+    <div class="search-group">
       <div class="search-container">
         <span class="search-icon" aria-hidden="true">🔍</span>
-        <input type="text" [(ngModel)]="globalSearchTerm" (input)="onGlobalSearch()" placeholder="Search anything..."
-          aria-label="Global search">
-
-        <span class="clear-icon" *ngIf="globalSearchTerm" (click)="clearGlobalSearch()" role="button"
-          aria-label="Clear search">✕</span>
-
-        <button class="page-btn highlight-btn" (click)="addRecordModal = true">
-          + Add Record
-        </button>
-
-        <button class="page-btn backup-btn" (click)="backupAllData()" title="Download Full CSV Backup">
-          📥 Backup Registry
-        </button>
+        <input type="text" [(ngModel)]="globalSearchTerm" (input)="onGlobalSearch()" placeholder="Search anything...">
+        <span class="clear-icon" *ngIf="globalSearchTerm" (click)="clearGlobalSearch()" role="button">✕</span>
       </div>
     </div>
-  </header>
+
+    <div class="filter-group">
+      <div class="active-filters-list" *ngIf="isFiltering">
+        <div *ngFor="let key of getActiveFilterKeys() | slice:0:3" class="filter-chip" (click)="removeFilter(key)">
+          <span class="chip-label">{{ formatLabel(key) }}:</span>
+          <span class="chip-value">{{ activeFilters[key] }}</span>
+          <span class="chip-icon">✕</span>
+        </div>
+        <div class="filter-chip more-indicator" *ngIf="getActiveFilterKeys().length > 3"
+          (click)="showFilterModal = true">
+          <span class="chip-label">...</span>
+        </div>
+      </div>
+
+      <button class="filter-trigger-btn" (click)="showFilterModal = true" [class.filtering-active]="isFiltering">
+        <span class="icon">⚙️</span> Advanced Filter
+      </button>
+    </div>
+  </div>
+</header>
 
   <div class="table-card">
     <table>
@@ -115,128 +119,86 @@
     </div>
   </div>
 
-  <div class="modal-backdrop" *ngIf="addRecordModal" (click)="addRecordModal = false">
-    <div class="filter-popup" (click)="$event.stopPropagation()">
-      <div class="popup-header">
-        <h2>🆕 Add New Car</h2>
-        <button class="close-x" (click)="addRecordModal = false" aria-label="Close">✕</button>
-      </div>
+<div class="modal-backdrop" *ngIf="addRecordModal" (click)="addRecordModal = false">
+  <div class="filter-popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h2>🆕 Add New Car</h2>
+      <p class="subtitle">Fill all the fields to add a new car record</p>
+      <button class="close-x" (click)="addRecordModal = false">✕</button>
+    </div>
 
-      <div class="popup-body">
-        <div class="filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-          <div class="filter-input-group">
-            <label for="add-make">Make <span style="color:red">*</span></label>
-            <input id="add-make" type="text" [(ngModel)]="newCar.make" placeholder="e.g. Ford">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-model">Model <span style="color:red">*</span></label>
-            <input id="add-model" type="text" [(ngModel)]="newCar.model" placeholder="e.g. Mustang">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-mpg">MPG <span style="color:red">*</span></label>
-            <input id="add-mpg" type="number" [(ngModel)]="newCar.mpg">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-cylinders">Cylinders <span style="color:red">*</span></label>
-            <input id="add-cylinders" type="number" [(ngModel)]="newCar.cylinders">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-disp">Displacement <span style="color:red">*</span></label>
-            <input id="add-disp" type="number" [(ngModel)]="newCar.displacement">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-hp">Horsepower <span style="color:red">*</span></label>
-            <input id="add-hp" type="number" [(ngModel)]="newCar.horsepower">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-weight">Weight <span style="color:red">*</span></label>
-            <input id="add-weight" type="number" [(ngModel)]="newCar.weight">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-accel">Acceleration <span style="color:red">*</span></label>
-            <input id="add-accel" type="number" [(ngModel)]="newCar.acceleration">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-year">Year <span style="color:red">*</span></label>
-            <input id="add-year" type="number" [(ngModel)]="newCar.model_year" placeholder="1978">
-          </div>
-          <div class="filter-input-group">
-            <label for="add-origin">Origin <span style="color:red">*</span></label>
-            <select id="add-origin" [(ngModel)]="newCar.origin">
-              <option value="usa">USA</option>
-              <option value="europe">Europe</option>
-              <option value="japan">Japan</option>
-            </select>
-          </div>
-        </div>
+    <div class="popup-body">
+      <div class="filter-input-group"
+        *ngFor="let field of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year']">
+        <label>{{ formatLabel(field) }} <span style="color:red">*</span></label>
+        <input [type]="field === 'make' || field === 'model' ? 'text' : 'number'" [(ngModel)]="newCar[field]">
       </div>
-
-      <div class="popup-footer">
-        <button class="btn-text" (click)="addRecordModal = false">Cancel</button>
-        <button class="page-btn highlight-btn" [disabled]="isFormInvalid" (click)="saveNewRecord()">
-          Save Record
-        </button>
+      <div class="filter-input-group">
+        <label>Origin <span style="color:red">*</span></label>
+        <select [(ngModel)]="newCar.origin">
+          <option value="usa">USA</option>
+          <option value="europe">Europe</option>
+          <option value="japan">Japan</option>
+        </select>
       </div>
     </div>
-  </div>
 
-  <div class="modal-backdrop" *ngIf="showFilterModal" (click)="showFilterModal = false">
-    <div class="filter-popup" (click)="$event.stopPropagation()">
-      <div class="popup-header">
-        <div>
-          <h2>Advanced Filter</h2>
-          <p class="subtitle" style="margin:0; font-size: 0.8rem; color: #64748b;">Search by any combination of
-            specifications</p>
-        </div>
-        <button class="close-x" (click)="showFilterModal = false" aria-label="Close">✕</button>
-      </div>
-
-      <div class="popup-body">
-        <div class="filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-          <div class="filter-input-group"
-            *ngFor="let key of ['make', 'model', 'model_year', 'cylinders', 'mpg', 'horsepower', 'displacement', 'weight', 'acceleration']">
-            <label [for]="'filter-' + key">{{ formatLabel(key) }}</label>
-            <input [id]="'filter-' + key" [type]="key === 'make' || key === 'model' ? 'text' : 'number'"
-              [(ngModel)]="tempFilters[key]" [placeholder]="'Search ' + formatLabel(key)">
-          </div>
-          <div class="filter-input-group">
-            <label for="filter-origin">Origin</label>
-            <select id="filter-origin" [(ngModel)]="tempFilters.origin">
-              <option value="">All Regions</option>
-              <option value="usa">USA</option>
-              <option value="europe">Europe</option>
-              <option value="japan">Japan</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="popup-footer">
-        <button class="btn-text" (click)="clearFilters()">Reset All</button>
-        <button class="page-btn highlight-btn" (click)="applyFilters()" style="min-width: 120px;">Apply Filters</button>
-      </div>
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="addRecordModal = false">Cancel</button>
+      <button class="page-btn highlight-btn" [disabled]="isFormInvalid" (click)="saveNewRecord()">Save Record</button>
     </div>
   </div>
+</div>
 
-  <div class="modal-backdrop" *ngIf="showDeleteModal" (click)="closeModal()">
-    <div class="filter-popup" (click)="$event.stopPropagation()" style="max-width: 400px;">
-      <div class="popup-header">
-        <h3>Confirm Deletion</h3>
-        <button class="close-x" (click)="closeModal()" aria-label="Close">✕</button>
+<div class="modal-backdrop" *ngIf="showFilterModal" (click)="showFilterModal = false">
+  <div class="filter-popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <div>
+        <h2>Advanced Filter</h2>
+        <p class="subtitle">Search by any combination of specifications</p>
       </div>
-      <div class="popup-body">
-        <p>
-          Are you sure you want to delete the
-          <strong>{{ carToDelete?.make }} {{ carToDelete?.model }}</strong>?
-          This action cannot be undone.
-        </p>
+      <button class="close-x" (click)="showFilterModal = false">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <div class="filter-input-group"
+        *ngFor="let key of ['make', 'model', 'model_year', 'cylinders', 'mpg', 'horsepower', 'displacement', 'weight', 'acceleration']">
+        <label>{{ formatLabel(key) }}</label>
+        <input [type]="key === 'make' || key === 'model' ? 'text' : 'number'" [(ngModel)]="tempFilters[key]"
+          [placeholder]="'Search ' + formatLabel(key)">
       </div>
-      <div class="popup-footer">
-        <button class="btn-text" (click)="closeModal()">Cancel</button>
-        <button class="page-btn" (click)="confirmDelete()" style="background: #ef4444; color: white; border: none;">
-          Delete Record
-        </button>
+      <div class="filter-input-group">
+        <label>Origin</label>
+        <select [(ngModel)]="tempFilters.origin">
+          <option value="">All Regions</option>
+          <option value="usa">USA</option>
+          <option value="europe">Europe</option>
+          <option value="japan">Japan</option>
+        </select>
       </div>
     </div>
+
+    <div class="popup-footer">
+      <button class="btn-reset" (click)="clearFilters()">Reset All</button>
+      <button class="page-btn highlight-btn" (click)="applyFilters()">Apply Filters</button>
+    </div>
   </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showDeleteModal" (click)="closeModal()">
+  <div class="filter-popup delete-modal-width" (click)="$event.stopPropagation()" style="max-width: 450px;">
+    <div class="popup-header">
+      <h3>Confirm Deletion</h3>
+      <button class="close-x" (click)="closeModal()">✕</button>
+    </div>
+    <div class="popup-body">
+      <p>Are you sure you want to delete <strong>{{ carToDelete?.make }} {{ carToDelete?.model }}</strong>?</p>
+      <p style="color: #ef4444; font-size: 0.8rem; margin-top: 10px;">This action cannot be undone.</p>
+    </div>
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+      <button class="btn-danger" (click)="confirmDelete()">Delete Record</button>
+    </div>
+  </div>
+</div>
 </div>

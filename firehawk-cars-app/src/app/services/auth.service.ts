@@ -1,5 +1,11 @@
 import { Injectable, inject } from '@angular/core';
-import { Auth, user, signInWithEmailAndPassword, idToken, onAuthStateChanged } from '@angular/fire/auth'; 
+import {
+  Auth,
+  user,
+  signInWithEmailAndPassword,
+  idToken,
+  onAuthStateChanged,
+} from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { firstValueFrom, Observable } from 'rxjs';
 
@@ -8,7 +14,7 @@ export class AuthService {
   private auth = inject(Auth);
   private router = inject(Router);
   currentUser$: Observable<any> = user(this.auth);
-  private token: string | null = localStorage.getItem('auth_token'); 
+  private token: string | null = localStorage.getItem('auth_token');
 
   constructor() {
     idToken(this.auth).subscribe(async (t) => {
@@ -24,17 +30,21 @@ export class AuthService {
 
   async login(email: string, pass: string) {
     try {
-      const userCredential = await signInWithEmailAndPassword(this.auth, email, pass);
+      const userCredential = await signInWithEmailAndPassword(
+        this.auth,
+        email,
+        pass
+      );
       const token = await userCredential.user.getIdToken();
-      
+
       this.token = token;
       localStorage.setItem('auth_token', token);
-      
-      this.router.navigate(['/dashboard']); 
+
+      this.router.navigate(['/dashboard']);
       return userCredential.user;
     } catch (error) {
       console.error('Login error:', error);
-      throw error; 
+      throw error;
     }
   }
 
@@ -43,8 +53,8 @@ export class AuthService {
     return !!u || !!localStorage.getItem('auth_token');
   }
 
-  getToken() { 
-    return this.token || localStorage.getItem('auth_token'); 
+  getToken() {
+    return this.token || localStorage.getItem('auth_token');
   }
 
   async logout() {

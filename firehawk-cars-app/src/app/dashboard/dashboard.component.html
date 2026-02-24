@@ -1,5 +1,5 @@
 <div class="dashboard">
-  <div class="toast-popup" [class.active]="showToast">
+  <div class="toast-popup" [class.active]="showToast" role="alert" aria-live="assertive">
     <div class="toast-card">
       <div class="toast-status-bar"></div>
       <div class="toast-body">
@@ -7,7 +7,7 @@
           <span class="toast-icon">✓</span>
         </div>
         <div class="toast-text">
-          <p class="toast-title">{{ toastTitle }}</p>
+          <p class="toast-title"><strong>{{ toastTitle }}</strong></p>
           <p class="toast-desc">{{ toastDesc }}</p>
         </div>
       </div>
@@ -19,21 +19,18 @@
 
     <div class="header-controls">
       <button class="logout-btn" (click)="onLogout()">Sign Out</button>
-      
+
       <div class="search-row">
         <div class="active-filters-list" *ngIf="isFiltering">
-          <div *ngFor="let key of getActiveFilterKeys() | slice:0:5" 
-               class="filter-chip" 
-               (click)="removeFilter(key)">
+          <div *ngFor="let key of getActiveFilterKeys() | slice:0:5" class="filter-chip" (click)="removeFilter(key)"
+            role="button" title="Remove filter">
             <span class="chip-label">{{ formatLabel(key) }}:</span>
             <span class="chip-value">{{ activeFilters[key] }}</span>
-            <span class="chip-icon">✕</span>
+            <span class="chip-icon" aria-hidden="true">✕</span>
           </div>
 
-          <div class="filter-chip more-indicator" 
-               *ngIf="getActiveFilterKeys().length > 5"
-               (click)="showFilterModal = true"
-               title="Click to see all filters">
+          <div class="filter-chip more-indicator" *ngIf="getActiveFilterKeys().length > 5"
+            (click)="showFilterModal = true" title="See all filters">
             <span class="chip-label">...</span>
           </div>
         </div>
@@ -44,14 +41,13 @@
       </div>
 
       <div class="search-container">
-        <span class="search-icon">🔍</span>
-        <input type="text" 
-               [(ngModel)]="globalSearchTerm" 
-               (input)="onGlobalSearch()" 
-               placeholder="Search anything...">
-        
-        <span class="clear-icon" *ngIf="globalSearchTerm" (click)="clearGlobalSearch()">✕</span>
-        
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" [(ngModel)]="globalSearchTerm" (input)="onGlobalSearch()" placeholder="Search anything..."
+          aria-label="Global search">
+
+        <span class="clear-icon" *ngIf="globalSearchTerm" (click)="clearGlobalSearch()" role="button"
+          aria-label="Clear search">✕</span>
+
         <button class="page-btn highlight-btn" (click)="addRecordModal = true">
           + Add Record
         </button>
@@ -67,9 +63,9 @@
     <table>
       <thead>
         <tr>
-          <th *ngFor="let col of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year', 'origin']" 
-              (click)="setSort(col)" 
-              [class.active-sort]="sortColumn === col">
+          <th
+            *ngFor="let col of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year', 'origin']"
+            (click)="setSort(col)" [class.active-sort]="sortColumn === col" style="cursor: pointer;">
             <div class="header-content">
               {{ formatLabel(col) | titlecase }}
               <span class="sort-icon">
@@ -82,7 +78,7 @@
               </span>
             </div>
           </th>
-          <th></th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -98,13 +94,13 @@
           <td>{{ car.model_year }}</td>
           <td>{{ car.origin }}</td>
           <td>
-            <button class="delete-btn" (click)="onDelete(car)" title="Delete Record">
+            <button class="delete-btn" (click)="onDelete(car)" title="Delete Record" aria-label="Delete Record">
               🗑️
             </button>
           </td>
         </tr>
         <tr *ngIf="displayCars.length === 0">
-          <td colspan="10" style="text-align: center; padding: 40px; color: #64748b;">
+          <td colspan="11" style="text-align: center; padding: 40px; color: #64748b;">
             No cars found matching your search.
           </td>
         </tr>
@@ -114,7 +110,8 @@
     <div class="table-footer">
       <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
       <span>Page {{ currentPage }} of {{ totalPages }}</span>
-      <button class="page-btn" (click)="nextPage()" [disabled]="!isFiltering ? !nextPageToken : currentPage >= totalPages">Next</button>
+      <button class="page-btn" (click)="nextPage()"
+        [disabled]="!isFiltering ? !nextPageToken : currentPage >= totalPages">Next</button>
     </div>
   </div>
 
@@ -122,50 +119,50 @@
     <div class="filter-popup" (click)="$event.stopPropagation()">
       <div class="popup-header">
         <h2>🆕 Add New Car</h2>
-        <button class="close-x" (click)="addRecordModal = false">✕</button>
+        <button class="close-x" (click)="addRecordModal = false" aria-label="Close">✕</button>
       </div>
-      
+
       <div class="popup-body">
         <div class="filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
           <div class="filter-input-group">
-            <label>Make <span style="color:red">*</span></label>
-            <input type="text" [(ngModel)]="newCar.make" placeholder="e.g. Ford">
+            <label for="add-make">Make <span style="color:red">*</span></label>
+            <input id="add-make" type="text" [(ngModel)]="newCar.make" placeholder="e.g. Ford">
           </div>
           <div class="filter-input-group">
-            <label>Model <span style="color:red">*</span></label>
-            <input type="text" [(ngModel)]="newCar.model" placeholder="e.g. Mustang">
+            <label for="add-model">Model <span style="color:red">*</span></label>
+            <input id="add-model" type="text" [(ngModel)]="newCar.model" placeholder="e.g. Mustang">
           </div>
           <div class="filter-input-group">
-            <label>MPG <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.mpg">
+            <label for="add-mpg">MPG <span style="color:red">*</span></label>
+            <input id="add-mpg" type="number" [(ngModel)]="newCar.mpg">
           </div>
           <div class="filter-input-group">
-            <label>Cylinders <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.cylinders">
+            <label for="add-cylinders">Cylinders <span style="color:red">*</span></label>
+            <input id="add-cylinders" type="number" [(ngModel)]="newCar.cylinders">
           </div>
           <div class="filter-input-group">
-            <label>Displacement <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.displacement">
+            <label for="add-disp">Displacement <span style="color:red">*</span></label>
+            <input id="add-disp" type="number" [(ngModel)]="newCar.displacement">
           </div>
           <div class="filter-input-group">
-            <label>Horsepower <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.horsepower">
+            <label for="add-hp">Horsepower <span style="color:red">*</span></label>
+            <input id="add-hp" type="number" [(ngModel)]="newCar.horsepower">
           </div>
           <div class="filter-input-group">
-            <label>Weight <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.weight">
+            <label for="add-weight">Weight <span style="color:red">*</span></label>
+            <input id="add-weight" type="number" [(ngModel)]="newCar.weight">
           </div>
           <div class="filter-input-group">
-            <label>Acceleration <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.acceleration">
+            <label for="add-accel">Acceleration <span style="color:red">*</span></label>
+            <input id="add-accel" type="number" [(ngModel)]="newCar.acceleration">
           </div>
           <div class="filter-input-group">
-            <label>Year <span style="color:red">*</span></label>
-            <input type="number" [(ngModel)]="newCar.model_year" placeholder="1978">
+            <label for="add-year">Year <span style="color:red">*</span></label>
+            <input id="add-year" type="number" [(ngModel)]="newCar.model_year" placeholder="1978">
           </div>
           <div class="filter-input-group">
-            <label>Origin <span style="color:red">*</span></label>
-            <select [(ngModel)]="newCar.origin">
+            <label for="add-origin">Origin <span style="color:red">*</span></label>
+            <select id="add-origin" [(ngModel)]="newCar.origin">
               <option value="usa">USA</option>
               <option value="europe">Europe</option>
               <option value="japan">Japan</option>
@@ -173,13 +170,10 @@
           </div>
         </div>
       </div>
-  
+
       <div class="popup-footer">
         <button class="btn-text" (click)="addRecordModal = false">Cancel</button>
-        <button 
-          class="page-btn highlight-btn" 
-          [disabled]="isFormInvalid" 
-          (click)="saveNewRecord()">
+        <button class="page-btn highlight-btn" [disabled]="isFormInvalid" (click)="saveNewRecord()">
           Save Record
         </button>
       </div>
@@ -191,20 +185,23 @@
       <div class="popup-header">
         <div>
           <h2>Advanced Filter</h2>
-          <p class="subtitle" style="margin:0; font-size: 0.8rem; color: #64748b;">Search by any combination of specifications</p>
+          <p class="subtitle" style="margin:0; font-size: 0.8rem; color: #64748b;">Search by any combination of
+            specifications</p>
         </div>
-        <button class="close-x" (click)="showFilterModal = false">✕</button>
+        <button class="close-x" (click)="showFilterModal = false" aria-label="Close">✕</button>
       </div>
-      
+
       <div class="popup-body">
         <div class="filter-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-          <div class="filter-input-group" *ngFor="let key of ['make', 'model', 'model_year', 'cylinders', 'mpg', 'horsepower', 'displacement', 'weight', 'acceleration']">
-            <label>{{ formatLabel(key) }}</label>
-            <input [type]="key === 'make' || key === 'model' ? 'text' : 'number'" [(ngModel)]="tempFilters[key]" [placeholder]="'Search ' + formatLabel(key)">
+          <div class="filter-input-group"
+            *ngFor="let key of ['make', 'model', 'model_year', 'cylinders', 'mpg', 'horsepower', 'displacement', 'weight', 'acceleration']">
+            <label [for]="'filter-' + key">{{ formatLabel(key) }}</label>
+            <input [id]="'filter-' + key" [type]="key === 'make' || key === 'model' ? 'text' : 'number'"
+              [(ngModel)]="tempFilters[key]" [placeholder]="'Search ' + formatLabel(key)">
           </div>
           <div class="filter-input-group">
-            <label>Origin</label>
-            <select [(ngModel)]="tempFilters.origin">
+            <label for="filter-origin">Origin</label>
+            <select id="filter-origin" [(ngModel)]="tempFilters.origin">
               <option value="">All Regions</option>
               <option value="usa">USA</option>
               <option value="europe">Europe</option>
@@ -213,24 +210,32 @@
           </div>
         </div>
       </div>
-  
+
       <div class="popup-footer">
         <button class="btn-text" (click)="clearFilters()">Reset All</button>
         <button class="page-btn highlight-btn" (click)="applyFilters()" style="min-width: 120px;">Apply Filters</button>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop" *ngIf="showDeleteModal">
-    <div class="modal-card">
-      <h3>Confirm Deletion</h3>
-      <p>
-        Are you sure you want to delete the 
-        <strong>{{ carToDelete?.make }} {{ carToDelete?.model }}</strong>? 
-        This action cannot be undone.
-      </p>
-      <div class="modal-actions">
-        <button class="btn-secondary" (click)="closeModal()">Cancel</button>
-        <button class="btn-danger" (click)="confirmDelete()">Delete Record</button>
+
+  <div class="modal-backdrop" *ngIf="showDeleteModal" (click)="closeModal()">
+    <div class="filter-popup" (click)="$event.stopPropagation()" style="max-width: 400px;">
+      <div class="popup-header">
+        <h3>Confirm Deletion</h3>
+        <button class="close-x" (click)="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="popup-body">
+        <p>
+          Are you sure you want to delete the
+          <strong>{{ carToDelete?.make }} {{ carToDelete?.model }}</strong>?
+          This action cannot be undone.
+        </p>
+      </div>
+      <div class="popup-footer">
+        <button class="btn-text" (click)="closeModal()">Cancel</button>
+        <button class="page-btn" (click)="confirmDelete()" style="background: #ef4444; color: white; border: none;">
+          Delete Record
+        </button>
       </div>
     </div>
   </div>

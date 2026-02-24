@@ -1,0 +1,204 @@
+<div class="dashboard">
+  <div class="toast-popup" [class.active]="showToast" role="alert" aria-live="assertive">
+    <div class="toast-card">
+      <div class="toast-status-bar"></div>
+      <div class="toast-body">
+        <div class="icon-circle">
+          <span class="toast-icon">✓</span>
+        </div>
+        <div class="toast-text">
+          <p class="toast-title"><strong>{{ toastTitle }}</strong></p>
+          <p class="toast-desc">{{ toastDesc }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<header class="management-card">
+  <div class="card-row top-bar">
+    <div class="brand-section">
+      <h1>John's Car Registry</h1>
+      <span class="count-badge">{{ totalRecords }} Records</span>
+    </div>
+
+    <div class="action-group">
+      <button class="page-btn highlight-btn" (click)="addRecordModal = true">
+        + Add Record
+      </button>
+      <button class="page-btn backup-btn" (click)="backupAllData()" title="Download Full CSV Backup">
+        📥 Backup Registry
+      </button>
+      <button class="logout-btn" (click)="onLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <hr class="card-divider">
+
+  <div class="card-row controls-bar">
+    <div class="search-group">
+      <div class="search-container">
+        <span class="search-icon" aria-hidden="true">🔍</span>
+        <input type="text" [(ngModel)]="globalSearchTerm" (input)="onGlobalSearch()" placeholder="Search anything...">
+        <span class="clear-icon" *ngIf="globalSearchTerm" (click)="clearGlobalSearch()" role="button">✕</span>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <div class="active-filters-list" *ngIf="isFiltering">
+        <div *ngFor="let key of getActiveFilterKeys() | slice:0:3" class="filter-chip" (click)="removeFilter(key)">
+          <span class="chip-label">{{ formatLabel(key) }}:</span>
+          <span class="chip-value">{{ activeFilters[key] }}</span>
+          <span class="chip-icon">✕</span>
+        </div>
+        <div class="filter-chip more-indicator" *ngIf="getActiveFilterKeys().length > 3"
+          (click)="showFilterModal = true">
+          <span class="chip-label">...</span>
+        </div>
+      </div>
+
+      <button class="filter-trigger-btn" (click)="showFilterModal = true" [class.filtering-active]="isFiltering">
+        <span class="icon">⚙️</span> Advanced Filter
+      </button>
+    </div>
+  </div>
+</header>
+
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th
+            *ngFor="let col of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year', 'origin']"
+            (click)="setSort(col)" [class.active-sort]="sortColumn === col" style="cursor: pointer;">
+            <div class="header-content">
+              {{ formatLabel(col) | titlecase }}
+              <span class="sort-icon">
+                <ng-container *ngIf="sortColumn === col">
+                  {{ sortDirection === 'asc' ? '▲' : '▼' }}
+                </ng-container>
+                <ng-container *ngIf="sortColumn !== col">
+                  ↕
+                </ng-container>
+              </span>
+            </div>
+          </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let car of displayCars">
+          <td>{{ car.make }}</td>
+          <td>{{ car.model }}</td>
+          <td>{{ car.mpg }}</td>
+          <td>{{ car.cylinders }}</td>
+          <td>{{ car.displacement }}</td>
+          <td>{{ car.horsepower }}</td>
+          <td>{{ car.weight | number }}</td>
+          <td>{{ car.acceleration }}</td>
+          <td>{{ car.model_year }}</td>
+          <td>{{ car.origin }}</td>
+          <td>
+            <button class="delete-btn" (click)="onDelete(car)" title="Delete Record" aria-label="Delete Record">
+              🗑️
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="displayCars.length === 0">
+          <td colspan="11" style="text-align: center; padding: 40px; color: #64748b;">
+            No cars found matching your search.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="table-footer">
+      <button class="page-btn" (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ totalPages }}</span>
+      <button class="page-btn" (click)="nextPage()"
+        [disabled]="!isFiltering ? !nextPageToken : currentPage >= totalPages">Next</button>
+    </div>
+  </div>
+
+<div class="modal-backdrop" *ngIf="addRecordModal" (click)="addRecordModal = false">
+  <div class="filter-popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <h2>🆕 Add New Car</h2>
+      <p class="subtitle">Fill all the fields to add a new car record</p>
+      <button class="close-x" (click)="addRecordModal = false">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <div class="filter-input-group"
+        *ngFor="let field of ['make', 'model', 'mpg', 'cylinders', 'displacement', 'horsepower', 'weight', 'acceleration', 'model_year']">
+        <label>{{ formatLabel(field) }} <span style="color:red">*</span></label>
+        <input [type]="field === 'make' || field === 'model' ? 'text' : 'number'" [(ngModel)]="newCar[field]">
+      </div>
+      <div class="filter-input-group">
+        <label>Origin <span style="color:red">*</span></label>
+        <select [(ngModel)]="newCar.origin">
+          <option value="usa">USA</option>
+          <option value="europe">Europe</option>
+          <option value="japan">Japan</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="addRecordModal = false">Cancel</button>
+      <button class="page-btn highlight-btn" [disabled]="isFormInvalid" (click)="saveNewRecord()">Save Record</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showFilterModal" (click)="showFilterModal = false">
+  <div class="filter-popup" (click)="$event.stopPropagation()">
+    <div class="popup-header">
+      <div>
+        <h2>Advanced Filter</h2>
+        <p class="subtitle">Search by any combination of specifications</p>
+      </div>
+      <button class="close-x" (click)="showFilterModal = false">✕</button>
+    </div>
+
+    <div class="popup-body">
+      <div class="filter-input-group"
+        *ngFor="let key of ['make', 'model', 'model_year', 'cylinders', 'mpg', 'horsepower', 'displacement', 'weight', 'acceleration']">
+        <label>{{ formatLabel(key) }}</label>
+        <input [type]="key === 'make' || key === 'model' ? 'text' : 'number'" [(ngModel)]="tempFilters[key]"
+          [placeholder]="'Search ' + formatLabel(key)">
+      </div>
+      <div class="filter-input-group">
+        <label>Origin</label>
+        <select [(ngModel)]="tempFilters.origin">
+          <option value="">All Regions</option>
+          <option value="usa">USA</option>
+          <option value="europe">Europe</option>
+          <option value="japan">Japan</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="popup-footer">
+      <button class="btn-reset" (click)="clearFilters()">Reset All</button>
+      <button class="page-btn highlight-btn" (click)="applyFilters()">Apply Filters</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showDeleteModal" (click)="closeModal()">
+  <div class="filter-popup delete-modal-width" (click)="$event.stopPropagation()" style="max-width: 450px;">
+    <div class="popup-header">
+      <h3>Confirm Deletion</h3>
+      <button class="close-x" (click)="closeModal()">✕</button>
+    </div>
+    <div class="popup-body">
+      <p>Are you sure you want to delete <strong>{{ carToDelete?.make }} {{ carToDelete?.model }}</strong>?</p>
+      <p style="color: #ef4444; font-size: 0.8rem; margin-top: 10px;">This action cannot be undone.</p>
+    </div>
+    <div class="popup-footer">
+      <button class="btn-cancel" (click)="closeModal()">Cancel</button>
+      <button class="btn-danger" (click)="confirmDelete()">Delete Record</button>
+    </div>
+  </div>
+</div>
+</div>

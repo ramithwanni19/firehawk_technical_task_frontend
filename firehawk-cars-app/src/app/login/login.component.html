@@ -1,0 +1,26 @@
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <h2> Car Registry Login</h2>
+      <p class="subtitle">Enter your credentials to login</p>
+    </div>
+
+    <form (submit)="onLogin()" class="login-body">
+      <div class="filter-input-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" [(ngModel)]="email" name="email" placeholder="admin@example.com" required>
+      </div>
+
+      <div class="filter-input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" [(ngModel)]="password" name="password" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="login-submit-btn">Login</button>
+
+      <p class="error-message" *ngIf="errorMessage">
+        <span class="error-icon">⚠️</span> {{ errorMessage }}
+      </p>
+    </form>
+  </div>
+</div>

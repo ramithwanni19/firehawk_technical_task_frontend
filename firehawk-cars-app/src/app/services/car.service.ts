@@ -3,6 +3,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface Car {
   id?: string;
@@ -28,7 +29,7 @@ export interface CarResponse {
   providedIn: 'root',
 })
 export class CarService {
-  private readonly API_URL = 'http://192.168.1.8:3000/api';
+  private readonly API_URL = environment.apiUrl;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
